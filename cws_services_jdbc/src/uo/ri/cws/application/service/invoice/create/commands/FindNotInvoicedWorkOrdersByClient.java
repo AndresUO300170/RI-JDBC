@@ -1,25 +1,23 @@
 package uo.ri.cws.application.service.invoice.create.commands;
 
+import uo.ri.conf.Factories;
+import uo.ri.cws.application.persistence.invoice.InvoicingWorkOrderGateway;
+import uo.ri.cws.application.persistence.invoice.InvoicingWorkOrderGateway.InvoicingWorkOrderRecord;
 import uo.ri.cws.application.service.invoice.InvoicingService.InvoicingWorkOrderDto;
+import uo.ri.cws.application.service.invoice.create.InvoiceWorkOrderDtoAssembler;
 import uo.ri.util.assertion.ArgumentChecks;
 import uo.ri.cws.application.persistence.util.jdbc.Jdbc;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 public class FindNotInvoicedWorkOrdersByClient {
 
-    private static final String TWORKORDERS_FINDNOTINVOICED =
-            "select a.id, a.description, a.date, a.state, a.amount"
-                    + " from TWorkOrders as a, TVehicles as v, TClients as c"
-                    + " where a.vehicle_id = v.id" + " and v.client_id = c.id"
-                    + "state like 'APPROVED' and nif like ?";
-
+    private InvoicingWorkOrderGateway gateway = Factories.persistence.forInvoice();
+    private InvoiceWorkOrderDtoAssembler assembler = new InvoiceWorkOrderDtoAssembler();
     private String nif;
 
     public FindNotInvoicedWorkOrdersByClient(String nif) {
@@ -28,30 +26,27 @@ public class FindNotInvoicedWorkOrdersByClient {
     }
 
     public List<InvoicingWorkOrderDto> execute(){
-
-        List<InvoicingWorkOrderDto> findByClient = new ArrayList<>();
-
-        try (Connection c = Jdbc.createThreadConnection()) {
-            try (PreparedStatement pst = c
-                    .prepareStatement(TWORKORDERS_FINDNOTINVOICED)) {
-                pst.setString(1, nif);
-                try (ResultSet rs = pst.executeQuery();) {
-                    while (rs.next()) {
-                        InvoicingWorkOrderDto invoicingWorkOrderDto = new InvoicingWorkOrderDto();
-                        invoicingWorkOrderDto.id =  rs.getString(1);
-                        invoicingWorkOrderDto.description = rs.getString(2);
-                        invoicingWorkOrderDto.date = rs.getTimestamp(3).toLocalDateTime();
-                        invoicingWorkOrderDto.state = rs.getString(4);
-                        invoicingWorkOrderDto.amount = BigDecimal.valueOf(rs.getDouble(5));
-                        findByClient.add(invoicingWorkOrderDto);
-                    }
-                }
+        try (Connection c = Jdbc.createThreadConnection()){
+            c.setAutoCommit(false);
+            try{
+                List<InvoicingWorkOrderDto> nIWO = findNotInvoicedWorkOrdersByClient(nif);
+                c.commit();
+                return nIWO;
+            }catch(Exception e){
+                c.rollback();
+                throw e;
             }
-        } catch (
-                SQLException e) {
+        }catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return findByClient;
+    }
+
+    public List<InvoicingWorkOrderDto> findNotInvoicedWorkOrdersByClient(String nif){
+        List<InvoicingWorkOrderRecord> records = gateway.findNotInvoicedWorkOrdersByClient(nif);
+        List<InvoicingWorkOrderDto> notInvoicingWorkOrders = new LinkedList<>();
+        for(InvoicingWorkOrderRecord record: records)
+            notInvoicingWorkOrders.add(assembler.toDto(Optional.of(record)).get());
+        return notInvoicingWorkOrders;
     }
 
 }

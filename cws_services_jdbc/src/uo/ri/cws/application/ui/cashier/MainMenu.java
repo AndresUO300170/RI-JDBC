@@ -13,7 +13,7 @@ public class MainMenu extends BaseMenu {
                 { "Find not invoiced work orders by client",
                         FindNotInvoicedWorkOrdersByClientAction.class },
                 { "Find work orders by plate", UnsupportedOperationException.class },
-                { "Invoice work orders", UnsupportedOperationException.class },
+                { "Invoice work orders", InvoiceWorkorderAction.class },
                 { "Settle invoice", SettleInvoiceAction.class }, };
 
     }

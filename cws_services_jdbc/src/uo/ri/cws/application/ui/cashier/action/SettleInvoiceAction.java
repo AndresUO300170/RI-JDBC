@@ -1,10 +1,11 @@
 package uo.ri.cws.application.ui.cashier.action;
 
-import uo.ri.cws.application.service.invoice.InvoicingService;
+import uo.ri.cws.application.service.invoice.InvoicingService.InvoiceDto;
+import uo.ri.util.console.Console;
 import uo.ri.util.exception.BusinessException;
 import uo.ri.util.menu.Action;
 
-import java.util.List;
+import java.util.Optional;
 
 public class SettleInvoiceAction implements Action {
 
@@ -26,7 +27,9 @@ public class SettleInvoiceAction implements Action {
      */
     @Override
     public void execute() throws BusinessException {
-        // TODO ...
+        long number = Console.readInt("Type invoice number: ");
+        Console.println("\nInvoice information \n");
+
     }
 
 }

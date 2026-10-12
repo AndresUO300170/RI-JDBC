@@ -1,6 +1,7 @@
 package uo.ri.cws.application.service.invoice;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -31,7 +32,7 @@ public interface InvoicingService {
 	 *  - any of the workOrderIds is null
 	 */
 	InvoiceDto create(List<String> workOrderIds)
-			throws BusinessException;
+            throws BusinessException, SQLException;
 
 	/**
 	 * Returns a list with info of all the work orders of all the client's
@@ -132,7 +133,7 @@ public interface InvoicingService {
 	public static class InvoicingWorkOrderDto {
 		public String id;
 		public String description;
-		public LocalDateTime date;
+		public LocalDate date;
 		public String state;
 		public BigDecimal amount;
 	}

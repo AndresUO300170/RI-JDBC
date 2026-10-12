@@ -12,9 +12,6 @@ import uo.ri.util.menu.Action;
 
 public class ListAllMechanicsAction implements Action {
 
-    private static final String TMECHANICS_FINDALL = "SELECT ID, NAME, "
-            + "SURNAME, NIF, VERSION FROM TMECHANICS";
-
     @Override
     public void execute() throws BusinessException {
 

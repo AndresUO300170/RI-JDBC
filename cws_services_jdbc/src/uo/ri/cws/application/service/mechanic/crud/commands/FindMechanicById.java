@@ -1,53 +1,50 @@
 package uo.ri.cws.application.service.mechanic.crud.commands;
 
+import uo.ri.conf.Factories;
+import uo.ri.cws.application.persistence.mechanic.MechanicGateway;
+import uo.ri.cws.application.persistence.mechanic.MechanicGateway.MechanicRecord;
 import uo.ri.cws.application.service.mechanic.MechanicCrudService.MechanicDto;
+import uo.ri.cws.application.service.mechanic.crud.MechanicDtoAssembler;
 import uo.ri.util.assertion.ArgumentChecks;
-import uo.ri.util.exception.BusinessException;
 import uo.ri.cws.application.persistence.util.jdbc.Jdbc;
+import uo.ri.util.assertion.BusinessChecks;
+import uo.ri.util.exception.BusinessException;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 
 public class FindMechanicById {
 
-    private static final String TMECHANICS_FINDBYID =
-            "select * from TMechanics where id = ?";
+    private String idMechanic;
+    private MechanicGateway mg = Factories.persistence.forMechanic();
+    private MechanicDtoAssembler assembler = new MechanicDtoAssembler();
 
-    private String id;
-
-    public FindMechanicById(String id){
-        ArgumentChecks.isNotBlank(id, "Invalid id");
-        this.id = id;
+    public FindMechanicById(String idMechanic){
+        ArgumentChecks.isNotBlank(idMechanic, "Invalid id");
+        this.idMechanic = idMechanic;
     }
 
     public Optional<MechanicDto> execute(){
-        Optional<MechanicDto> result = Optional.empty();
         try (Connection c = Jdbc.createThreadConnection()) {
-            try (PreparedStatement pst = c
-                    .prepareStatement(TMECHANICS_FINDBYID)) {
-                pst.setString(1, id);
-                try (ResultSet rs = pst.executeQuery()) {
-                    if (rs.next()) {
-                        MechanicDto m = new MechanicDto();
-
-                        m.id = rs.getString(1);
-                        m.name = rs.getString(2);
-                        m.surname = rs.getString(3);
-                        m.nif = rs.getString(4);
-                        m.version = rs.getLong(5);
-
-                        result = Optional.of(m);
-                    }
-                    else
-                        throw new BusinessException("Mechanic does not exist");
-                }
+            c.setAutoCommit(false);
+            try{
+                Optional<MechanicDto> dto = findMechanicById(idMechanic);
+                c.commit();
+                return dto;
+            }
+            catch(Exception e){
+                c.rollback();
+                throw e;
             }
         } catch (SQLException | BusinessException e) {
             throw new RuntimeException(e);
         }
-        return result;
+    }
+
+    private Optional<MechanicDto> findMechanicById(String id) throws BusinessException {
+        Optional<MechanicRecord> record = mg.findById(id);
+        BusinessChecks.exists(record, "The mechanic does not exist");
+        return assembler.toDto(record);
     }
 }

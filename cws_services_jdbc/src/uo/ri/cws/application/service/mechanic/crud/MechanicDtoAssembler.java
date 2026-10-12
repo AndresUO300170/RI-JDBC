@@ -18,9 +18,16 @@ public class MechanicDtoAssembler {
     }
 
     public Optional<MechanicDto> toDto(Optional<MechanicRecord> byNif){
-        Optional<MechanicDto> result = Optional.empty();
-        if(byNif.isPresent())
-            result = Optional.of(Optional.of(byNif));
-        return result;
+        if(byNif.isEmpty())
+            return Optional.empty();
+        MechanicRecord r = byNif.get();
+        MechanicDto dto = new MechanicDto();
+        dto.id = r.id;
+        dto.version = r.version;
+        dto.nif = r.nif;
+        dto.name = r.name;
+        dto.surname = r.surname;
+
+        return Optional.of(dto);
     }
 }

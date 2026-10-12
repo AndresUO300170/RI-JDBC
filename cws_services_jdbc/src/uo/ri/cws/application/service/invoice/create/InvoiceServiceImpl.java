@@ -2,9 +2,11 @@ package uo.ri.cws.application.service.invoice.create;
 
 import uo.ri.cws.application.service.invoice.InvoicingService;
 import uo.ri.cws.application.service.invoice.create.commands.FindNotInvoicedWorkOrdersByClient;
+import uo.ri.cws.application.service.invoice.create.commands.InvoiceWorkOrder;
 import uo.ri.util.exception.BusinessException;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -12,8 +14,8 @@ import java.util.Optional;
 public class InvoiceServiceImpl implements InvoicingService {
 
     @Override
-    public InvoiceDto create(List<String> workOrderIds) throws BusinessException {
-        return null;
+    public InvoiceDto create(List<String> workOrderIds) throws BusinessException, SQLException {
+        return new InvoiceWorkOrder(workOrderIds).execute();
     }
 
     @Override

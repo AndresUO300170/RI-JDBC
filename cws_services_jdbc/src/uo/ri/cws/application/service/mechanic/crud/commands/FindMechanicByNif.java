@@ -2,9 +2,11 @@ package uo.ri.cws.application.service.mechanic.crud.commands;
 
 import uo.ri.conf.Factories;
 import uo.ri.cws.application.persistence.mechanic.MechanicGateway;
+import uo.ri.cws.application.persistence.mechanic.MechanicGateway.MechanicRecord;
 import uo.ri.cws.application.service.mechanic.MechanicCrudService.MechanicDto;
 import uo.ri.cws.application.service.mechanic.crud.MechanicDtoAssembler;
 import uo.ri.util.assertion.ArgumentChecks;
+import uo.ri.util.assertion.BusinessChecks;
 import uo.ri.util.exception.BusinessException;
 import uo.ri.util.exception.PersistenceException;
 import uo.ri.cws.application.persistence.util.jdbc.Jdbc;
@@ -29,7 +31,7 @@ public class FindMechanicByNif {
         try(Connection c = Jdbc.createThreadConnection();){
             c.setAutoCommit(false);
             try{
-                result = Optional.of(assembler.toDto(mg.findByNif(nif)));
+                result = findMechanicByNif(nif);
                 c.commit();
                 return result;
             }
@@ -40,5 +42,10 @@ public class FindMechanicByNif {
         } catch (SQLException | BusinessException e) {
             throw new PersistenceException(e);
         }
+    }
+    private Optional<MechanicDto> findMechanicByNif(String nif) throws BusinessException {
+        Optional<MechanicRecord> record = mg.findByNif(nif);
+        BusinessChecks.exists(record, "The mechanic does not exist");
+        return assembler.toDto(record);
     }
 }
